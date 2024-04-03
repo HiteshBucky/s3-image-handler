@@ -54,6 +54,24 @@ const response = await s3Module.getSignedUrlFromKey(config, keyName);
 console.log('response', response); // https://bucket1.s3.ap-south-1.amazonaws.com/61b11f67-b9e7-432c-84e1-74801c1d30ef.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X
 ```
 
+### Retrieving a File with Expiry Time for signed URL
+We can pass additional options in getSignedUrlFromKey(). Here we have to pass expiresInSecond key and the value. By default the signed url will have an expiry of 15 minutes.
+
+```javascript
+const config = {
+  accessKeyId: 'AJDJKLSDJKLJSDKDKLSL', // Enter your access key here
+  secretAccessKey: 'hY7uuu+dksdk+99as9dsjksdljskld', // Enter your secret key here
+  region: 'ap-south-1', // Enter your region here example: ap-south-1
+  bucket: 'bucket1', //Enter your bucket name here:
+};
+const keyName = '61b11f67-b9e7-432c-84e1-74801c1d30ef.png';
+const options = { expiresInSecond: 60 };
+const response = await s3Module.getSignedUrlFromKey(config, keyName, options);
+
+console.log('response', response); // https://bucket1.s3.ap-south-1.amazonaws.com/61b11f67-b9e7-432c-84e1-74801c1d30ef.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X
+```
+
+
 ## Example to upload image in express js
 
 Step 1: Setup multer: We will need multer so that we can access the files that are uploaded while calling our api

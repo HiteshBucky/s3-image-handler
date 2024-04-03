@@ -25,9 +25,6 @@ const S3ConfigSchema = Joi.object({
     'any.required':
       'Invalid S3 configuration. Missing required fields. Bucket is required to create a S3Helper Object',
   }),
-  folder: Joi.string().trim().optional(),
-  acl: Joi.string().trim().optional(),
-  expiresInMinutes: Joi.number().optional(),
 })
   .required()
   .messages({
@@ -41,16 +38,16 @@ const S3ConfigSchema = Joi.object({
  * @param {string} config.secretAccessKey
  * @param {string} config.region Region where you want to store the file
  * @param {string} config.bucket Bucket Name where you want to store the file
- * @param {string?} config.folder Folder Name where you want to store the file
- * @param {string?} config.acl Access Control List
- * @param {string?} config.expiresInMinutes Expiry Time for the Signed URL
- *
- * @param {*} data : File Data that needs to be uploaded
- * @param {*} options : Additional Options
- * @param {string} options.key : Key Name for the file
- * @param {boolean} options.fetchedSignedUrl : Fetch Signed URL for the file otherwise function will return only unsigned url
- * @param {string} options.fileType : File Type for the file
- * @returns
+*
+* @param {*} data : File Data that needs to be uploaded
+
+* @param {*} options : Additional Options
+* @param {string} options.key : Key Name for the file
+* @param {boolean} options.fetchedSignedUrl : Fetch Signed URL for the file otherwise function will return only unsigned url
+* @param {string} options.fileType : File Type for the file
+* @param {string?} options.expiresInSecond Expiry Time for the Signed URL in seconds
+
+* @returns {object} : Returns the key, url and signedUrl(optional)
  */
 
 exports.uploadFile = async (config, data, options = {}) => {
@@ -61,7 +58,7 @@ exports.uploadFile = async (config, data, options = {}) => {
   }
 
   // Destrcuture the options
-  let { key, fetchedSignedUrl = false, fileType = null } = options;
+  let { key, fetchedSignedUrl = false, fileType = null, expiresInSecond } = options;
 
   // Validate the fileType
   if (fileType && !Object.values(FILETYPES).includes(fileType)) {
@@ -102,7 +99,8 @@ exports.uploadFile = async (config, data, options = {}) => {
 
   let signedUrl;
   if (fetchedSignedUrl) {
-    signedUrl = await this.getSignedUrlFromKey(s3Config, keyName);
+    const getSignedUrlOptions = { expiresInSecond };
+    signedUrl = await this.getSignedUrlFromKey(s3Config, keyName, getSignedUrlOptions);
   }
 
   return { key: keyName, url, signedUrl };
@@ -114,12 +112,10 @@ exports.getUnsignedUrlFromKey = (config, key) => {
   return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
 };
 
-exports.getSignedUrlFromKey = async (config, key) => {
+exports.getSignedUrlFromKey = async (config, key, options = {}) => {
   const s3params = {
     Bucket: config.bucket,
     Key: key,
   };
-  const signedUrl = await s3Helper.getSignedUrl(config, s3params);
-
-  return signedUrl;
+  return s3Helper.getSignedUrl(config, s3params, options);
 };

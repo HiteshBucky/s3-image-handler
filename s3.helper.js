@@ -12,7 +12,9 @@ exports.upload = async (config, s3Params) => {
   return s3Client.send(new PutObjectCommand(s3Params));
 };
 
-exports.getSignedUrl = async (config, s3Params) => {
+exports.getSignedUrl = async (config, s3Params, options = {}) => {
+  const { expiresInSecond = 60 * 15 } = options;
+
   const s3Client = new S3Client({
     region: config.region,
     credentials: {
@@ -21,12 +23,14 @@ exports.getSignedUrl = async (config, s3Params) => {
     },
   });
 
-  const input = {
+  const command = new GetObjectCommand({
     ...s3Params,
-  };
+  });
+
+  const additionalOption = { expiresIn: expiresInSecond };
 
   // return s3Client.send(new GetObjectCommand(input));
 
   // Implement the logic to get the signed URL
-  return getSignedUrl(s3Client, new GetObjectCommand(input));
+  return getSignedUrl(s3Client, command, additionalOption);
 };
